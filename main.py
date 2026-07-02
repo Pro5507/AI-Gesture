@@ -72,3 +72,33 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
     with right:
         show_output()
+
+def reset_magic_session():
+    if not st.session_state.prediction:
+        st.warning("Capture or upload an image first.")
+        return
+    label = st.session_state.prediction["label"]
+    spell = st.session_state.spell_name
+    st.session_state.spell_prompt = build_hidden_prompt(label, spell, st.session_state.input_source)
+    with st.spinner("Casting AI magic from the detected gesture..."):
+        st.session_state.spell_text = generate_magic_responce(label, spell, f"This spell came from a {st.session_state.input_source} hand-gesture image.")
+        if img:
+            st.session_state.spell_scene_image = img
+            st.session_state.spell_card_image = create_spell_card(spell, label, st.session_state.spell_text, img)
+        else:
+            st.session_state.spell_scene_image = st.session_state.spell_card_image = None
+            st.error(err or "Could not generate the spell image.")
+        st.session_state.spell_log = ([{"gesture": label, "spell": spell, "text": st.session_state.spell_text, "source": st.session_state.input_source}] = st.session_state.spell_log) [:config.MAX_SPELL_LOG]
+def show_hud():
+    c1, c2, c3, c4 = st.coulumns(4)
+    gesture  = st.session_state.prediction["label"] if st.session_state.prediction else "Waiting"
+    spell = st.session_state.spell_nname or "No Spell Yet"
+    for col, label, val in [
+        (c1, "Supported Gestures", "Palm . Peace . Poninter . Thumbs Up"),
+        (c2, "Detected Gesture", gesture),
+        (c3, "Active Spell", spell),
+        (c4, "Spell Log", len(st.session_state.spell_log)),
+    ]:
+        col.markdown(f'<div class="status-card"><b>{label}</b><br>{val}</div>', unsafe_allow_html=True)
+
+def prediction_panel(current_image: Image.Image, source_name: str)
